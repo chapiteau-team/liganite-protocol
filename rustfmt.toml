@@ -1,0 +1,12 @@
+edition = "2021"
+use_small_heuristics = "Max"
+imports_granularity = "Crate"
+newline_style = "Unix"
+chain_width = 80
+spaces_around_ranges = false
+binop_separator = "Back"
+reorder_impl_items = true
+match_block_trailing_comma = true
+use_field_init_shorthand = true
+wrap_comments = true
+comment_width = 100
