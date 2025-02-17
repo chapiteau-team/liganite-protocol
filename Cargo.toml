@@ -35,7 +35,7 @@ serde_json = { version = "1.0.132", default-features = false }
 
 # Local Dependencies
 liganite-runtime = { path = "./runtime", default-features = false }
-pallet-template = { path = "./pallets/template", default-features = false }
+liganite-publish = { path = "pallets/publish", default-features = false }
 
 # Substrate client
 sc-basic-authorship = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2412-1", default-features = false }

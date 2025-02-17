@@ -1,4 +1,4 @@
-//! Substrate Node Template CLI library.
+//! Liganite node.
 #![warn(missing_docs)]
 
 mod benchmarking;

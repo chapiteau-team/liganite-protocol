@@ -5,6 +5,7 @@ CARGO_NIGHTLY := "cargo +nightly"
 CARGO_BUILD_FLAGS := "--locked"
 
 # Add color support for better readability
+
 BOLD := `tput bold 2>/dev/null || echo ''`
 GREEN := `tput setaf 2 2>/dev/null || echo ''`
 RED := `tput setaf 1 2>/dev/null || echo ''`
@@ -25,7 +26,7 @@ help:
 # Install all dependencies
 install:
     @chmod +x ./.maintenance/scripts/install-openssl.sh
-    @./.maintenance/scripts/install-openssl.sh || (echo "{{RED}}Failed to install openssl{{RESET}}" && exit 1)
+    @./.maintenance/scripts/install-openssl.sh || (echo "{{ RED }}Failed to install openssl{{ RESET }}" && exit 1)
 
 # Check if the stable toolchain is installed
 check-stable-toolchain:
@@ -97,8 +98,8 @@ build crate: check-stable-toolchain
 # and reliability of the project.
 ################################################################################
 
-test: check-stable-toolchain
-    {{ CARGO }} test
+test-all: check-stable-toolchain
+    {{ CARGO }} test --features runtime-benchmarks {{ CARGO_BUILD_FLAGS }}
 
 ################################################################################
 # RUN SECTION

@@ -19,7 +19,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 serde_json = { workspace = true, default-features = false, features = ["alloc"] }
 
 # Local Dependencies
-pallet-template = { workspace = true }
+liganite-publish = { workspace = true }
 
 # scale
 scale-codec = { workspace = true, features = ["derive"] }
@@ -83,7 +83,7 @@ std = [
     "pallet-balances/std",
     "pallet-grandpa/std",
     "pallet-sudo/std",
-    "pallet-template/std",
+    "liganite-publish/std",
     "pallet-timestamp/std",
     "pallet-transaction-payment-rpc-runtime-api/std",
     "pallet-transaction-payment/std",
@@ -114,7 +114,7 @@ runtime-benchmarks = [
     "pallet-balances/runtime-benchmarks",
     "pallet-grandpa/runtime-benchmarks",
     "pallet-sudo/runtime-benchmarks",
-    "pallet-template/runtime-benchmarks",
+    "liganite-publish/runtime-benchmarks",
     "pallet-timestamp/runtime-benchmarks",
     "pallet-transaction-payment/runtime-benchmarks",
     "sp-runtime/runtime-benchmarks",
@@ -129,7 +129,7 @@ try-runtime = [
     "pallet-balances/try-runtime",
     "pallet-grandpa/try-runtime",
     "pallet-sudo/try-runtime",
-    "pallet-template/try-runtime",
+    "liganite-publish/try-runtime",
     "pallet-timestamp/try-runtime",
     "pallet-transaction-payment/try-runtime",
     "sp-runtime/try-runtime",
