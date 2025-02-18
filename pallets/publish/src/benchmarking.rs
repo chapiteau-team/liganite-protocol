@@ -6,6 +6,7 @@ use super::*;
 use crate::Pallet as Publish;
 use frame_benchmarking::v2::*;
 use frame_system::RawOrigin;
+use liganite_primitives::{testing::bounded_vec, MAX_NAME_SIZE, MAX_URL_SIZE};
 use scale_info::prelude::vec;
 
 #[benchmarks]
@@ -13,9 +14,10 @@ mod benchmarks {
     use super::*;
 
     #[benchmark]
-    fn publisher_add(a: Linear<0, MAX_URL_SIZE>) {
-        let len = a as usize;
-        let details = PublisherDetails { url: Url::try_from(vec![b'a'; len]).unwrap() };
+    fn publisher_add(a: Linear<0, MAX_NAME_SIZE>, b: Linear<0, MAX_URL_SIZE>) {
+        let name = bounded_vec(&vec![b'a'; a as usize]);
+        let url = bounded_vec(&vec![b'b'; b as usize]);
+        let details = PublisherDetails { name, url };
         let caller: T::AccountId = whitelisted_caller();
 
         #[extrinsic_call]

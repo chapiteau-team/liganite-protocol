@@ -5009,12 +5009,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "liganite-primitives"
+version = "0.0.1"
+dependencies = [
+ "frame-support",
+ "frame-system",
+]
+
+[[package]]
 name = "liganite-publish"
 version = "0.0.1"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "liganite-primitives",
  "parity-scale-codec",
  "scale-info",
  "sp-core",

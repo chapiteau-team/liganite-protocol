@@ -3,6 +3,7 @@
 
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
+use liganite_primitives::types::{Name, Url};
 
 // Re-export pallet items so that they can be accessed from the crate namespace.
 pub use pallet::*;
@@ -50,7 +51,7 @@ pub mod pallet {
         /// A publish has been added.
         PublisherAdded {
             /// The account which was added.
-            who: PublisherId<T>,
+            publisher: PublisherId<T>,
         },
     }
 
@@ -64,17 +65,20 @@ pub mod pallet {
     /// Dispatchable functions ([`Call`]s).
     #[pallet::call]
     impl<T: Config> Pallet<T> {
+        /// Adds a new publisher to the system.
+        ///
+        /// This function adds a publisher by storing their details in the `Publishers` storage. It
+        /// checks that the publisher does not already exist in the system before adding
+        /// them. A `PublisherAdded` event is emitted once the publisher is successfully
+        /// added.
         #[pallet::call_index(0)]
         #[pallet::weight(T::WeightInfo::publisher_add())]
         pub fn publisher_add(origin: OriginFor<T>, details: PublisherDetails) -> DispatchResult {
-            let who = ensure_signed(origin)?;
+            let publisher = ensure_signed(origin)?;
+            ensure!(!Publishers::<T>::contains_key(&publisher), Error::<T>::PublisherAlreadyExists);
 
-            if Publishers::<T>::contains_key(&who) {
-                return Err(Error::<T>::PublisherAlreadyExists.into());
-            }
-
-            Publishers::<T>::insert(&who, details);
-            Self::deposit_event(Event::PublisherAdded { who });
+            Publishers::<T>::insert(&publisher, details);
+            Self::deposit_event(Event::PublisherAdded { publisher });
             Ok(())
         }
     }
