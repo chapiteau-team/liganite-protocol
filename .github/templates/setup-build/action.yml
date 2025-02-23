@@ -1,0 +1,29 @@
+name: Setup build dependencies
+description: |
+  This action sets up a build environment for this project.
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Setup Ubuntu dependencies
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install -y clang llvm libudev-dev protobuf-compiler
+
+    - name: Install build tools
+      uses: taiki-e/install-action@v2
+      with:
+        tool: just
+
+    - name: rustup toolchain install
+      uses: dtolnay/rust-toolchain@v1
+      with:
+        toolchain: nightly
+        targets: wasm32-unknown-unknown
+        components: rustfmt, clippy
+
+    - name: Install build dependencies
+      shell: bash
+      run: just install

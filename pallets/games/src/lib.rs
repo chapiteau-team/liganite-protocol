@@ -93,12 +93,12 @@ pub mod pallet {
                 Error::<T>::InvalidPublisher
             );
             ensure!(
-                !PublishedGames::<T>::contains_key(&publisher, &game_id),
+                !PublishedGames::<T>::contains_key(&publisher, game_id),
                 Error::<T>::GameAlreadyExists
             );
             ensure!(details.is_valid(), Error::<T>::GameDetailsInvalid);
 
-            PublishedGames::<T>::insert(&publisher, &game_id, details);
+            PublishedGames::<T>::insert(&publisher, game_id, details);
             Self::deposit_event(Event::GameAdded { publisher, game_id });
             Ok(())
         }

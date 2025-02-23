@@ -1,0 +1,31 @@
+name: Task - Linters
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup build dependencies
+        uses: "./.github/templates/setup-build"
+
+      - name: Cache Build artefacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-rust-${{ hashFiles('**/rust-toolchain*') }}
+          save-if: false
+
+      - name: Check formatting
+        shell: bash
+        run: just fmt
+
+      - name: Clippy
+        shell: bash
+        run: just clippy

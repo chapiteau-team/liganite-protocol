@@ -1,0 +1,20 @@
+name: Workflow - Main
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  linters:
+    name: Run linters
+    uses: ./.github/workflows/linters.yml
+
+  build_test:
+    name: Build & Tests
+    uses: ./.github/workflows/build-test.yml

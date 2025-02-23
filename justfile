@@ -54,12 +54,12 @@ check-nightly-toolchain:
 ################################################################################
 
 # Run Clippy on the codebase
-clippy:
+clippy: check-stable-toolchain
     {{ CARGO }} clippy --locked --all-targets --all-features -- -D warnings
 
 # Run rustfmt on the codebase
-fmt:
-    {{ CARGO_NIGHTLY }} fmt -- --check
+fmt: check-nightly-toolchain
+    {{ CARGO_NIGHTLY }} fmt --all -- --check
 
 ################################################################################
 # BUILD SECTION
