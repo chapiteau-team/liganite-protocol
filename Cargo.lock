@@ -4966,6 +4966,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "liganite-games"
+version = "0.0.1"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "liganite-primitives",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
 name = "liganite-node"
 version = "0.0.1"
 dependencies = [
@@ -5014,6 +5029,8 @@ version = "0.0.1"
 dependencies = [
  "frame-support",
  "frame-system",
+ "parity-scale-codec",
+ "scale-info",
 ]
 
 [[package]]
@@ -5043,6 +5060,7 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "frame-try-runtime",
+ "liganite-games",
  "liganite-publish",
  "pallet-aura",
  "pallet-balances",

@@ -14,7 +14,7 @@ mod benchmarks {
     use super::*;
 
     #[benchmark]
-    fn publisher_add(a: Linear<0, MAX_NAME_SIZE>, b: Linear<0, MAX_URL_SIZE>) {
+    fn publisher_add(a: Linear<1, MAX_NAME_SIZE>, b: Linear<0, MAX_URL_SIZE>) {
         let name = bounded_vec(&vec![b'a'; a as usize]);
         let url = bounded_vec(&vec![b'b'; b as usize]);
         let details = PublisherDetails { name, url };

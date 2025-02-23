@@ -3,7 +3,10 @@
 
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
-use liganite_primitives::types::{Name, Url};
+use liganite_primitives::{
+    publisher::PublisherManager,
+    types::{PublisherDetails, PublisherId},
+};
 
 // Re-export pallet items so that they can be accessed from the crate namespace.
 pub use pallet::*;
@@ -16,9 +19,6 @@ mod tests;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
-
-mod types;
-use types::*;
 
 pub mod weights;
 pub use weights::*;
@@ -39,7 +39,7 @@ pub mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
     }
 
-    /// Storage for the publish details.
+    /// Storage for the publish details. Is a map of PublisherId -> PublisherDetails.
     #[pallet::storage]
     pub type Publishers<T> =
         StorageMap<_, Twox64Concat, PublisherId<T>, PublisherDetails, OptionQuery>;
@@ -60,6 +60,8 @@ pub mod pallet {
     pub enum Error<T> {
         /// The publish already exists.
         PublisherAlreadyExists,
+        /// The publisher details are invalid.
+        PublisherDetailsInvalid,
     }
 
     /// Dispatchable functions ([`Call`]s).
@@ -76,10 +78,23 @@ pub mod pallet {
         pub fn publisher_add(origin: OriginFor<T>, details: PublisherDetails) -> DispatchResult {
             let publisher = ensure_signed(origin)?;
             ensure!(!Publishers::<T>::contains_key(&publisher), Error::<T>::PublisherAlreadyExists);
+            ensure!(details.is_valid(), Error::<T>::PublisherDetailsInvalid);
 
-            Publishers::<T>::insert(&publisher, details);
+            Publishers::<T>::insert(&publisher, &details);
             Self::deposit_event(Event::PublisherAdded { publisher });
             Ok(())
         }
+    }
+}
+
+impl<T: Config> PublisherManager for Pallet<T> {
+    type PublisherId = PublisherId<T>;
+
+    fn is_valid_publisher(publisher_id: &PublisherId<T>) -> bool {
+        Publishers::<T>::contains_key(publisher_id)
+    }
+
+    fn insert_publisher(publisher_id: &PublisherId<T>, details: &PublisherDetails) {
+        Publishers::<T>::insert(publisher_id, details);
     }
 }

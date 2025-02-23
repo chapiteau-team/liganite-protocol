@@ -220,7 +220,9 @@ mod runtime {
     #[runtime::pallet_index(6)]
     pub type Sudo = pallet_sudo;
 
-    // Include the custom logic from the pallet-publish in the runtime.
     #[runtime::pallet_index(7)]
     pub type Publish = liganite_publish;
+
+    #[runtime::pallet_index(8)]
+    pub type Games = liganite_games;
 }

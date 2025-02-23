@@ -1,5 +1,9 @@
-use crate as liganite_publish;
+use crate as liganite_games;
 use frame_support::derive_impl;
+use liganite_primitives::{
+    publisher::PublisherManager,
+    types::{PublisherDetails, PublisherId},
+};
 use sp_runtime::BuildStorage;
 
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -26,7 +30,7 @@ mod runtime {
     pub type System = frame_system::Pallet<Test>;
 
     #[runtime::pallet_index(1)]
-    pub type Publish = liganite_publish::Pallet<Test>;
+    pub type Games = liganite_games::Pallet<Test>;
 }
 
 #[derive_impl(frame_system::config_preludes::TestDefaultConfig)]
@@ -34,9 +38,24 @@ impl frame_system::Config for Test {
     type Block = Block;
 }
 
-impl liganite_publish::Config for Test {
+pub struct MockPublisherManager;
+
+pub const INVALID_PUBLISHER: PublisherId<Test> = 0;
+
+impl PublisherManager for MockPublisherManager {
+    type PublisherId = PublisherId<Test>;
+
+    fn is_valid_publisher(publisher_id: &Self::PublisherId) -> bool {
+        publisher_id != &INVALID_PUBLISHER
+    }
+
+    fn insert_publisher(_publisher_id: &Self::PublisherId, _details: &PublisherDetails) {}
+}
+
+impl liganite_games::Config for Test {
     type WeightInfo = ();
     type RuntimeEvent = RuntimeEvent;
+    type PublisherManager = MockPublisherManager;
 }
 
 // Build genesis storage according to the mock runtime.

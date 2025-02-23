@@ -1,5 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub mod publisher;
 pub mod testing;
 pub mod types;
 

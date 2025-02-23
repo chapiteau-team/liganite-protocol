@@ -35,6 +35,7 @@ jsonrpsee = { version = "0.24.3" }
 serde_json = { version = "1.0.132", default-features = false }
 
 # Local Dependencies
+liganite-games = { path = "pallets/games", default-features = false }
 liganite-primitives = { path = "primitives", default-features = false }
 liganite-publish = { path = "pallets/publish", default-features = false }
 liganite-runtime = { path = "./runtime", default-features = false }
