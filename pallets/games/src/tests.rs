@@ -10,7 +10,7 @@ fn test_game_add() {
 
         let publisher = 1;
         let game_id = 1;
-        let details = GameDetails { name: bounded_vec(b"Example Game") };
+        let details = GameDetails { name: bounded_vec(b"Example Game"), ..Default::default() };
         assert_ok!(Games::game_add(RuntimeOrigin::signed(publisher), game_id, details.clone()));
 
         assert_eq!(PublishedGames::<Test>::get(publisher, game_id), Some(details));
@@ -23,7 +23,7 @@ fn test_game_add_game_already_exists() {
     new_test_ext().execute_with(|| {
         let publisher = 1;
         let game_id = 1;
-        let details = GameDetails { name: bounded_vec(b"Example Game") };
+        let details = GameDetails { name: bounded_vec(b"Example Game"), ..Default::default() };
         PublishedGames::<Test>::insert(publisher, game_id, details.clone());
 
         assert_noop!(
@@ -38,7 +38,7 @@ fn test_game_add_invalid_publisher() {
     new_test_ext().execute_with(|| {
         let publisher = INVALID_PUBLISHER;
         let game_id = 1;
-        let details = GameDetails { name: bounded_vec(b"Example Game") };
+        let details = GameDetails { name: bounded_vec(b"Example Game"), ..Default::default() };
         assert_noop!(
             Games::game_add(RuntimeOrigin::signed(publisher), game_id, details),
             Error::<Test>::InvalidPublisher
@@ -51,7 +51,7 @@ fn test_game_add_empty_name() {
     new_test_ext().execute_with(|| {
         let publisher = 1;
         let game_id = 1;
-        let details = GameDetails { name: bounded_vec(b"") };
+        let details = GameDetails { name: bounded_vec(b""), ..Default::default() };
         assert_noop!(
             Games::game_add(RuntimeOrigin::signed(publisher), game_id, details),
             Error::<Test>::GameDetailsInvalid

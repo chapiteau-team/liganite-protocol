@@ -5,7 +5,8 @@ use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
 use liganite_primitives::{
     publisher::PublisherManager,
-    types::{GameDetails, GameId, PublisherId},
+    tags::TAGS,
+    types::{GameDetails, GameId, PublisherId, Tag, TagId},
 };
 
 // Re-export pallet items so that they can be accessed from the crate namespace.
@@ -30,6 +31,25 @@ pub mod pallet {
     #[pallet::pallet]
     pub struct Pallet<T>(_);
 
+    #[pallet::genesis_config]
+    #[derive(frame_support::DefaultNoBound)]
+    pub struct GenesisConfig<T: Config> {
+        #[serde(skip)]
+        _marker: PhantomData<T>,
+    }
+
+    /// Build genesis storage. The tag storage is populated here.
+    #[pallet::genesis_build]
+    impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+        fn build(&self) {
+            TAGS.iter().enumerate().for_each(|(i, tag)| {
+                let tag = Tag::try_from(tag.as_bytes().to_vec())
+                    .expect("Failed to create tag at genesis build");
+                Tags::<T>::insert(i as TagId, tag);
+            })
+        }
+    }
+
     /// The pallet's configuration trait.
     #[pallet::config]
     pub trait Config: frame_system::Config {
@@ -52,6 +72,10 @@ pub mod pallet {
         GameDetails,
         OptionQuery,
     >;
+
+    /// Storage for the game tags. Is a map of TagId -> Tag.
+    #[pallet::storage]
+    pub type Tags<T> = CountedStorageMap<_, Blake2_128Concat, TagId, Tag, OptionQuery>;
 
     /// Events.
     #[pallet::event]
