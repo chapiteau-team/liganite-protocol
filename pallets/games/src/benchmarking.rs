@@ -26,7 +26,7 @@ mod benchmarks {
         );
 
         let game_id = 1;
-        let details = GameDetails { name, tags };
+        let details = GameDetails { name, tags, price: CurrencyOf::<T>::from(1_000u32) };
 
         #[extrinsic_call]
         _(RawOrigin::Signed(caller.clone()), game_id, details.clone());

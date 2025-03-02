@@ -13,7 +13,6 @@ pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type PublisherId<T> = AccountIdOf<T>;
 
 #[derive(Default, Clone, Eq, PartialEq, Debug, Encode, Decode, MaxEncodedLen, TypeInfo)]
-#[scale_info(skip_type_params(T))]
 pub struct PublisherDetails {
     /// The name of the publisher
     pub name: Name,
@@ -28,15 +27,17 @@ impl PublisherDetails {
 }
 
 #[derive(Default, Clone, Eq, PartialEq, Debug, Encode, Decode, MaxEncodedLen, TypeInfo)]
-#[scale_info(skip_type_params(T))]
-pub struct GameDetails {
+#[scale_info(skip_type_params(Currency))]
+pub struct GameDetails<Currency> {
     /// The name of the game
     pub name: Name,
     /// The tags of the game
     pub tags: GameTags,
+    /// The price of the game
+    pub price: Currency,
 }
 
-impl GameDetails {
+impl<Currency> GameDetails<Currency> {
     pub fn is_valid(&self) -> bool {
         !self.name.is_empty()
     }

@@ -139,4 +139,5 @@ impl liganite_games::Config for Runtime {
     type WeightInfo = liganite_games::weights::SubstrateWeight<Runtime>;
     type RuntimeEvent = RuntimeEvent;
     type PublisherManager = Publish;
+    type Currency = Balances;
 }

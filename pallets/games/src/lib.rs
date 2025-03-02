@@ -1,14 +1,16 @@
 // We make sure this pallet uses `no_std` for compiling to Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::pallet_prelude::*;
+use frame_support::{
+    pallet_prelude::*,
+    traits::fungible::{Inspect as FunInspect, Mutate as FunMutate},
+};
 use frame_system::pallet_prelude::*;
 use liganite_primitives::{
     publisher::PublisherManager,
     tags::TAGS,
-    types::{GameDetails, GameId, PublisherId, Tag, TagId},
+    types::{AccountIdOf, GameDetails, GameId, PublisherId, Tag, TagId},
 };
-
 // Re-export pallet items so that they can be accessed from the crate namespace.
 pub use pallet::*;
 
@@ -23,6 +25,10 @@ mod benchmarking;
 
 pub mod weights;
 pub use weights::*;
+
+type CurrencyOf<T> = <<T as Config>::Currency as FunInspect<AccountIdOf<T>>>::Balance;
+
+type GameDetailsOf<T> = GameDetails<CurrencyOf<T>>;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -59,6 +65,8 @@ pub mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
         /// Used to operate on publishers.
         type PublisherManager: PublisherManager<PublisherId = PublisherId<Self>>;
+        /// Used to operate on currencies.
+        type Currency: FunMutate<Self::AccountId>;
     }
 
     /// Storage for the game details. Is a map of PublisherId -> GameId -> GameDetails.
@@ -69,7 +77,7 @@ pub mod pallet {
         PublisherId<T>,
         Blake2_128Concat,
         GameId,
-        GameDetails,
+        GameDetailsOf<T>,
         OptionQuery,
     >;
 
@@ -109,7 +117,7 @@ pub mod pallet {
         pub fn game_add(
             origin: OriginFor<T>,
             game_id: GameId,
-            details: GameDetails,
+            details: GameDetails<CurrencyOf<T>>,
         ) -> DispatchResult {
             let publisher = ensure_signed(origin)?;
             ensure!(
