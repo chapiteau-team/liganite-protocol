@@ -4973,6 +4973,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "liganite-primitives",
+ "liganite-publish",
  "pallet-balances",
  "parity-scale-codec",
  "scale-info",

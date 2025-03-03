@@ -41,5 +41,9 @@ impl liganite_publish::Config for Test {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    frame_system::GenesisConfig::<Test>::default().build_storage().unwrap().into()
+    let storage = frame_system::GenesisConfig::<Test>::default().build_storage().unwrap();
+    let mut ext = sp_io::TestExternalities::new(storage);
+    // Go past genesis block so events get deposited
+    ext.execute_with(|| System::set_block_number(1));
+    ext
 }

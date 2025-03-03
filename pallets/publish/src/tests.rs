@@ -7,9 +7,6 @@ use liganite_primitives::{
 #[test]
 fn test_publisher_add() {
     new_test_ext().execute_with(|| {
-        // Go past genesis block so events get deposited
-        System::set_block_number(1);
-
         let publisher = 1;
         let details = PublisherDetails {
             name: bounded_vec(b"Example Publisher"),

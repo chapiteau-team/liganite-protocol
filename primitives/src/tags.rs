@@ -1,3 +1,4 @@
+/// List of predefined game tags.
 pub const TAGS: &[&str; 406] = &[
     // Top-Level Genres
     "Action",

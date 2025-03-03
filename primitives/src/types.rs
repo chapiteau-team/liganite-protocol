@@ -11,6 +11,7 @@ pub type TagId = u16;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type PublisherId<T> = AccountIdOf<T>;
+pub type BuyerId<T> = AccountIdOf<T>;
 
 #[derive(Default, Clone, Eq, PartialEq, Debug, Encode, Decode, MaxEncodedLen, TypeInfo)]
 pub struct PublisherDetails {
@@ -41,4 +42,10 @@ impl<Currency> GameDetails<Currency> {
     pub fn is_valid(&self) -> bool {
         !self.name.is_empty()
     }
+}
+
+#[derive(Default, Clone, Eq, PartialEq, Debug, Encode, Decode, MaxEncodedLen, TypeInfo)]
+#[scale_info(skip_type_params(Currency))]
+pub struct OrderDetails<Currency> {
+    pub deposit: Currency,
 }

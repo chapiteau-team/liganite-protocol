@@ -3,14 +3,15 @@
 
 use frame_support::{
     pallet_prelude::*,
-    traits::fungible::{Inspect as FunInspect, Mutate as FunMutate},
+    traits::fungible::{hold::Mutate as FunHoldMutate, Inspect as FunInspect, Mutate as FunMutate},
 };
 use frame_system::pallet_prelude::*;
 use liganite_primitives::{
     publisher::PublisherManager,
     tags::TAGS,
-    types::{AccountIdOf, GameDetails, GameId, PublisherId, Tag, TagId},
+    types::{AccountIdOf, BuyerId, GameDetails, GameId, OrderDetails, PublisherId, Tag, TagId},
 };
+
 // Re-export pallet items so that they can be accessed from the crate namespace.
 pub use pallet::*;
 
@@ -27,8 +28,8 @@ pub mod weights;
 pub use weights::*;
 
 type CurrencyOf<T> = <<T as Config>::Currency as FunInspect<AccountIdOf<T>>>::Balance;
-
 type GameDetailsOf<T> = GameDetails<CurrencyOf<T>>;
+type OrderDetailsOf<T> = OrderDetails<CurrencyOf<T>>;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -56,17 +57,31 @@ pub mod pallet {
         }
     }
 
+    /// A reason for the pallet placing a hold on funds.
+    #[pallet::composite_enum]
+    pub enum HoldReason {
+        /// The game payment.
+        GamePayment,
+    }
+
     /// The pallet's configuration trait.
     #[pallet::config]
     pub trait Config: frame_system::Config {
         /// A type representing the weights required by the dispatchables of this pallet.
         type WeightInfo: WeightInfo;
+
         /// The overarching runtime event type.
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+        /// Overarching hold reason.
+        type RuntimeHoldReason: From<HoldReason>;
+
+        /// Used to operate on currencies.
+        type Currency: FunMutate<Self::AccountId>
+            + FunHoldMutate<Self::AccountId, Reason = Self::RuntimeHoldReason>;
+
         /// Used to operate on publishers.
         type PublisherManager: PublisherManager<PublisherId = PublisherId<Self>>;
-        /// Used to operate on currencies.
-        type Currency: FunMutate<Self::AccountId>;
     }
 
     /// Storage for the game details. Is a map of PublisherId -> GameId -> GameDetails.
@@ -85,12 +100,45 @@ pub mod pallet {
     #[pallet::storage]
     pub type Tags<T> = CountedStorageMap<_, Blake2_128Concat, TagId, Tag, OptionQuery>;
 
+    /// Storage for the game orders. Is a map of PublisherId -> GameId -> BuyerId.
+    #[pallet::storage]
+    pub type PublisherOrders<T> = StorageDoubleMap<
+        _,
+        Twox64Concat,
+        PublisherId<T>,
+        Blake2_128Concat,
+        GameId,
+        BuyerId<T>,
+        OptionQuery,
+    >;
+
+    /// Storage for the game orders. Is a map of BuyerId -> (PublisherId, GameId) -> OrderDetails.
+    #[pallet::storage]
+    pub type BuyerOrders<T> = StorageDoubleMap<
+        _,
+        Twox64Concat,
+        BuyerId<T>,
+        Blake2_128Concat,
+        (PublisherId<T>, GameId),
+        OrderDetailsOf<T>,
+        OptionQuery,
+    >;
+
     /// Events.
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
         /// A game has been added.
         GameAdded {
+            /// The publisher of the game.
+            publisher: PublisherId<T>,
+            /// The game id.
+            game_id: GameId,
+        },
+        /// An order has been placed.
+        OrderPlaced {
+            /// The buyer of the game.
+            buyer: BuyerId<T>,
             /// The publisher of the game.
             publisher: PublisherId<T>,
             /// The game id.
@@ -103,6 +151,8 @@ pub mod pallet {
     pub enum Error<T> {
         /// The publisher is invalid.
         InvalidPublisher,
+        /// The game is not found.
+        GameNotFound,
         /// The game already exists.
         GameAlreadyExists,
         /// The game details are invalid.
@@ -117,7 +167,7 @@ pub mod pallet {
         pub fn game_add(
             origin: OriginFor<T>,
             game_id: GameId,
-            details: GameDetails<CurrencyOf<T>>,
+            details: GameDetailsOf<T>,
         ) -> DispatchResult {
             let publisher = ensure_signed(origin)?;
             ensure!(
@@ -131,7 +181,29 @@ pub mod pallet {
             ensure!(details.is_valid(), Error::<T>::GameDetailsInvalid);
 
             PublishedGames::<T>::insert(&publisher, game_id, details);
+
             Self::deposit_event(Event::GameAdded { publisher, game_id });
+            Ok(())
+        }
+
+        #[pallet::call_index(1)]
+        #[pallet::weight(T::WeightInfo::game_order())]
+        pub fn game_order(
+            origin: OriginFor<T>,
+            publisher: PublisherId<T>,
+            game_id: GameId,
+        ) -> DispatchResult {
+            let buyer = ensure_signed(origin)?;
+            let game_details =
+                PublishedGames::<T>::get(&publisher, game_id).ok_or(Error::<T>::GameNotFound)?;
+
+            T::Currency::hold(&HoldReason::GamePayment.into(), &buyer, game_details.price)?;
+
+            let order = OrderDetails { deposit: game_details.price };
+            BuyerOrders::<T>::insert(&buyer, (&publisher, game_id), &order);
+            PublisherOrders::<T>::insert(&publisher, game_id, &buyer);
+
+            Self::deposit_event(Event::OrderPlaced { buyer, publisher, game_id });
             Ok(())
         }
     }

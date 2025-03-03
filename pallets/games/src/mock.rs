@@ -5,7 +5,8 @@ use frame_support::{
 };
 use liganite_primitives::{
     publisher::PublisherManager,
-    types::{PublisherDetails, PublisherId},
+    testing::bounded_vec,
+    types::{BuyerId, PublisherDetails, PublisherId},
 };
 use sp_runtime::BuildStorage;
 
@@ -37,6 +38,9 @@ mod runtime {
     pub type Balances = pallet_balances::Pallet<Test>;
 
     #[runtime::pallet_index(2)]
+    pub type Publish = liganite_publish::Pallet<Test>;
+
+    #[runtime::pallet_index(3)]
     pub type Games = liganite_games::Pallet<Test>;
 }
 
@@ -63,28 +67,48 @@ impl pallet_balances::Config for Test {
     type DoneSlashHandler = ();
 }
 
-pub struct MockPublisherManager;
-
-pub const INVALID_PUBLISHER: PublisherId<Test> = 0;
-
-impl PublisherManager for MockPublisherManager {
-    type PublisherId = PublisherId<Test>;
-
-    fn is_valid_publisher(publisher_id: &Self::PublisherId) -> bool {
-        publisher_id != &INVALID_PUBLISHER
-    }
-
-    fn insert_publisher(_publisher_id: &Self::PublisherId, _details: &PublisherDetails) {}
+impl liganite_publish::Config for Test {
+    type WeightInfo = ();
+    type RuntimeEvent = RuntimeEvent;
 }
 
 impl liganite_games::Config for Test {
     type WeightInfo = ();
     type RuntimeEvent = RuntimeEvent;
-    type PublisherManager = MockPublisherManager;
+    type RuntimeHoldReason = RuntimeHoldReason;
     type Currency = Balances;
+    type PublisherManager = Publish;
 }
+
+pub const INITIAL_BALANCE: Balance = 1_000_000_000;
+
+pub const INVALID_PUBLISHER: PublisherId<Test> = 0;
+pub const PUBLISHER: PublisherId<Test> = 1;
+pub const FUNDED_BUYER: BuyerId<Test> = 11;
+pub const NON_FUNDED_BUYER: BuyerId<Test> = 12;
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    frame_system::GenesisConfig::<Test>::default().build_storage().unwrap().into()
+    let mut storage = frame_system::GenesisConfig::<Test>::default().build_storage().unwrap();
+
+    pallet_balances::GenesisConfig::<Test> {
+        balances: vec![(PUBLISHER, INITIAL_BALANCE), (FUNDED_BUYER, INITIAL_BALANCE)],
+    }
+    .assimilate_storage(&mut storage)
+    .unwrap();
+
+    let mut ext = sp_io::TestExternalities::new(storage);
+    ext.execute_with(|| {
+        Publish::insert_publisher(
+            &PUBLISHER,
+            &PublisherDetails {
+                name: bounded_vec(b"PUBLISHER"),
+                url: bounded_vec(b"https://publisher.mock"),
+            },
+        )
+    });
+
+    // Go past genesis block so events get deposited
+    ext.execute_with(|| System::set_block_number(1));
+    ext
 }
