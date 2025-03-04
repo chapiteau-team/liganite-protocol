@@ -66,48 +66,48 @@ impl frame_system::Config for Runtime {
 }
 
 impl pallet_aura::Config for Runtime {
-    type AllowMultipleBlocksPerSlot = ConstBool<false>;
     type AuthorityId = AuraId;
-    type DisabledValidators = ();
     type MaxAuthorities = ConstU32<32>;
+    type DisabledValidators = ();
+    type AllowMultipleBlocksPerSlot = ConstBool<false>;
     type SlotDuration = pallet_aura::MinimumPeriodTimesTwo<Runtime>;
 }
 
 impl pallet_grandpa::Config for Runtime {
-    type EquivocationReportSystem = ();
-    type KeyOwnerProof = sp_core::Void;
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
     type MaxAuthorities = ConstU32<32>;
     type MaxNominators = ConstU32<0>;
     type MaxSetIdSessionEntries = ConstU64<0>;
-    type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = ();
+    type KeyOwnerProof = sp_core::Void;
+    type EquivocationReportSystem = ();
 }
 
 impl pallet_timestamp::Config for Runtime {
-    type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
     /// A timestamp: milliseconds since the unix epoch.
     type Moment = u64;
     type OnTimestampSet = Aura;
+    type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
     type WeightInfo = ();
 }
 
 impl pallet_balances::Config for Runtime {
-    type AccountStore = System;
-    /// The type for recording an account's balance.
-    type Balance = Balance;
-    type DoneSlashHandler = ();
-    type DustRemoval = ();
-    type ExistentialDeposit = ConstU128<EXISTENTIAL_DEPOSIT>;
-    type FreezeIdentifier = RuntimeFreezeReason;
-    type MaxFreezes = VariantCountOf<RuntimeFreezeReason>;
-    type MaxLocks = ConstU32<50>;
-    type MaxReserves = ();
-    type ReserveIdentifier = [u8; 8];
     /// The ubiquitous event type.
     type RuntimeEvent = RuntimeEvent;
-    type RuntimeFreezeReason = RuntimeFreezeReason;
     type RuntimeHoldReason = RuntimeHoldReason;
+    type RuntimeFreezeReason = RuntimeFreezeReason;
     type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+    /// The type for recording an account's balance.
+    type Balance = Balance;
+    type DustRemoval = ();
+    type ExistentialDeposit = ConstU128<EXISTENTIAL_DEPOSIT>;
+    type AccountStore = System;
+    type ReserveIdentifier = [u8; 8];
+    type FreezeIdentifier = RuntimeFreezeReason;
+    type MaxLocks = ConstU32<50>;
+    type MaxReserves = ();
+    type MaxFreezes = VariantCountOf<RuntimeFreezeReason>;
+    type DoneSlashHandler = ();
 }
 
 parameter_types! {
@@ -115,18 +115,18 @@ parameter_types! {
 }
 
 impl pallet_transaction_payment::Config for Runtime {
-    type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
-    type LengthToFee = IdentityFee<Balance>;
-    type OnChargeTransaction = FungibleAdapter<Balances, ()>;
-    type OperationalFeeMultiplier = ConstU8<5>;
     type RuntimeEvent = RuntimeEvent;
-    type WeightInfo = pallet_transaction_payment::weights::SubstrateWeight<Runtime>;
+    type OnChargeTransaction = FungibleAdapter<Balances, ()>;
     type WeightToFee = IdentityFee<Balance>;
+    type LengthToFee = IdentityFee<Balance>;
+    type FeeMultiplierUpdate = ConstFeeMultiplier<FeeMultiplier>;
+    type OperationalFeeMultiplier = ConstU8<5>;
+    type WeightInfo = pallet_transaction_payment::weights::SubstrateWeight<Runtime>;
 }
 
 impl pallet_sudo::Config for Runtime {
-    type RuntimeCall = RuntimeCall;
     type RuntimeEvent = RuntimeEvent;
+    type RuntimeCall = RuntimeCall;
     type WeightInfo = pallet_sudo::weights::SubstrateWeight<Runtime>;
 }
 

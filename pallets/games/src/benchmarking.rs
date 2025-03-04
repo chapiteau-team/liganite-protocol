@@ -9,7 +9,7 @@ use frame_system::RawOrigin;
 use liganite_primitives::{
     testing::bounded_vec, types::PublisherDetails, MAX_NAME_SIZE, MAX_TAGS_PER_GAME,
 };
-use scale_info::prelude::vec;
+use scale_info::prelude::{vec, vec::Vec};
 
 const SEED: u32 = 0;
 
@@ -28,7 +28,11 @@ mod benchmarks {
     #[benchmark]
     fn game_add(a: Linear<1, MAX_NAME_SIZE>, b: Linear<0, MAX_TAGS_PER_GAME>) {
         let name = bounded_vec(&vec![b'a'; a as usize]);
-        let tags = bounded_vec(&vec![TagId::default(); b as usize]);
+        let tags = bounded_vec(&(0..b as TagId).collect::<Vec<_>>());
+
+        for tag in tags.iter() {
+            Tags::<T>::insert(*tag, Tag::default());
+        }
 
         let publisher = whitelisted_caller();
         T::PublisherManager::insert_publisher(

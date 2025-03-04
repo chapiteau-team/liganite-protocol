@@ -39,8 +39,8 @@ pub struct GameDetails<Currency> {
 }
 
 impl<Currency> GameDetails<Currency> {
-    pub fn is_valid(&self) -> bool {
-        !self.name.is_empty()
+    pub fn is_valid<V: Fn(&TagId) -> bool>(&self, valid_tag: V) -> bool {
+        !self.name.is_empty() && self.tags.iter().all(valid_tag)
     }
 }
 

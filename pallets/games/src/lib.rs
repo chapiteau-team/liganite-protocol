@@ -178,7 +178,10 @@ pub mod pallet {
                 !PublishedGames::<T>::contains_key(&publisher, game_id),
                 Error::<T>::GameAlreadyExists
             );
-            ensure!(details.is_valid(), Error::<T>::GameDetailsInvalid);
+            ensure!(
+                details.is_valid(|x| Tags::<T>::contains_key(x)),
+                Error::<T>::GameDetailsInvalid
+            );
 
             PublishedGames::<T>::insert(&publisher, game_id, details);
 
