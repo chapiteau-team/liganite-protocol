@@ -5,6 +5,7 @@ use super::*;
 #[allow(unused)]
 use crate::Pallet as Games;
 use frame_benchmarking::v2::*;
+use frame_support::sp_runtime::traits::{Bounded, CheckedDiv};
 use frame_system::RawOrigin;
 use liganite_primitives::{
     testing::bounded_vec, types::PublisherDetails, MAX_NAME_SIZE, MAX_TAGS_PER_GAME,
@@ -18,7 +19,10 @@ fn get_account<T: Config>(index: u32) -> T::AccountId {
 }
 
 fn prefund_account<T: Config>(account: &T::AccountId) {
-    T::Currency::set_balance(account, CurrencyOf::<T>::from(100_000_000u32));
+    let initial_balance = CurrencyOf::<T>::max_value()
+        .checked_div(&2u32.into())
+        .expect("never fails; qed");
+    T::Currency::set_balance(account, CurrencyOf::<T>::from(initial_balance));
 }
 
 #[benchmarks]
@@ -50,9 +54,9 @@ mod benchmarks {
     }
 
     #[benchmark]
-    fn game_order() {
+    fn order_place() {
         let publisher = get_account::<T>(0);
-        let game_id = 1;
+        let game_id = 10;
         let price = CurrencyOf::<T>::from(1_234u32);
         let game_details = GameDetails {
             name: bounded_vec(&vec![b'a'; MAX_NAME_SIZE as usize]),

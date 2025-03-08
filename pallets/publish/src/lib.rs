@@ -75,7 +75,7 @@ pub mod pallet {
         /// them. A `PublisherAdded` event is emitted once the publisher is successfully
         /// added.
         #[pallet::call_index(0)]
-        #[pallet::weight(T::WeightInfo::publisher_add())]
+        #[pallet::weight(T::WeightInfo::publisher_add(details.name.len() as u32, details.url.len() as u32))]
         pub fn publisher_add(origin: OriginFor<T>, details: PublisherDetails) -> DispatchResult {
             let publisher = ensure_signed(origin)?;
             ensure!(!Publishers::<T>::contains_key(&publisher), Error::<T>::PublisherAlreadyExists);

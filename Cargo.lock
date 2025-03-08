@@ -5088,6 +5088,7 @@ dependencies = [
  "sp-storage",
  "sp-transaction-pool",
  "sp-version",
+ "sp-weights",
  "substrate-wasm-builder",
 ]
 

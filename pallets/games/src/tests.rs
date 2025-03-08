@@ -65,7 +65,7 @@ fn test_game_order() {
             GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
         PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
 
-        assert_ok!(Games::game_order(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
+        assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
 
         let expected = OrderDetails { deposit: price };
         assert_eq!(BuyerOrders::<Test>::get(FUNDED_BUYER, (PUBLISHER, game_id)), Some(expected));
@@ -97,7 +97,7 @@ fn test_game_order_no_funds() {
         PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
 
         assert_noop!(
-            Games::game_order(RuntimeOrigin::signed(NON_FUNDED_BUYER), PUBLISHER, game_id),
+            Games::order_place(RuntimeOrigin::signed(NON_FUNDED_BUYER), PUBLISHER, game_id),
             TokenError::FundsUnavailable
         );
     })
@@ -107,7 +107,7 @@ fn test_game_order_no_funds() {
 fn test_game_order_invalid_game() {
     new_test_ext().execute_with(|| {
         assert_noop!(
-            Games::game_order(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, 1),
+            Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, 1),
             Error::<Test>::GameNotFound
         );
     })

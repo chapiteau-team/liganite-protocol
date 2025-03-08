@@ -3,6 +3,8 @@
 CARGO := "cargo"
 CARGO_NIGHTLY := "cargo +nightly"
 CARGO_BUILD_FLAGS := "--locked"
+RUNTIME_PROD := "./target/production/wbuild/liganite-runtime/liganite_runtime.compact.compressed.wasm"
+WEIGHTS_PATH := "./runtime/src/weights"
 
 # Add color support for better readability
 
@@ -27,6 +29,9 @@ help:
 install:
     @chmod +x ./.maintenance/scripts/install-openssl.sh
     @./.maintenance/scripts/install-openssl.sh || (echo "{{ RED }}Failed to install openssl{{ RESET }}" && exit 1)
+
+install-bencher:
+    @cargo install frame-omni-bencher
 
 # Check if the stable toolchain is installed
 check-stable-toolchain:
@@ -87,6 +92,10 @@ check crate: check-stable-toolchain
 build-all: check-stable-toolchain
     {{ CARGO }} build {{ CARGO_BUILD_FLAGS }}
 
+# Build benchmarks
+build-bench: check-stable-toolchain
+    {{ CARGO }} build --features runtime-benchmarks --profile=production {{ CARGO_BUILD_FLAGS }}
+
 # Build a specific project (e.g. just build-crate runtime)
 build crate: check-stable-toolchain
     {{ CARGO }} build -p liganite-{{ crate }} {{ CARGO_BUILD_FLAGS }}
@@ -98,6 +107,7 @@ build crate: check-stable-toolchain
 # and reliability of the project.
 ################################################################################
 
+# Run all tests
 test-all: check-stable-toolchain
     {{ CARGO }} test --features runtime-benchmarks {{ CARGO_BUILD_FLAGS }}
 
@@ -108,5 +118,18 @@ test-all: check-stable-toolchain
 # testing purposes.
 ################################################################################
 
+# Benchmark all pallets
+bench-pallets: install-bencher
+    @chmod +x ./.maintenance/scripts/benchmark-pallets.sh
+    @./.maintenance/scripts/benchmark-pallets.sh {{ RUNTIME_PROD }} {{ WEIGHTS_PATH }}
+
+# Benchmark overhead
+bench-overhead: install-bencher
+    @frame-omni-bencher v1 benchmark overhead --runtime {{ RUNTIME_PROD }} --weight-path {{ WEIGHTS_PATH }}
+
+# Run all benchmarks
+bench-all: bench-pallets bench-overhead
+
+# Run the node in development mode
 run-dev: check-stable-toolchain
     {{ CARGO }} run -- --dev

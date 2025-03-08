@@ -162,8 +162,13 @@ pub mod pallet {
     /// Dispatchable functions ([`Call`]s).
     #[pallet::call]
     impl<T: Config> Pallet<T> {
+        /// Adds a new game to the system.
+        ///
+        /// This function adds a game by storing their details in the `PublishedGames` storage. It
+        /// checks that the game does not already exist in the system before adding
+        /// them. A `GameAdded` event is emitted once the game is successfully added.
         #[pallet::call_index(0)]
-        #[pallet::weight(T::WeightInfo::game_add())]
+        #[pallet::weight(T::WeightInfo::game_add(details.name.len() as u32, details.tags.len() as u32))]
         pub fn game_add(
             origin: OriginFor<T>,
             game_id: GameId,
@@ -189,9 +194,14 @@ pub mod pallet {
             Ok(())
         }
 
+        /// Places an order for a game.
+        ///
+        /// This function places an order for a game by storing their details in the `BuyerOrders`
+        /// and `PublisherOrders` storage. It checks that the game exists in the system before
+        /// adding them. A `OrderPlaced` event is emitted once the order is successfully added.
         #[pallet::call_index(1)]
-        #[pallet::weight(T::WeightInfo::game_order())]
-        pub fn game_order(
+        #[pallet::weight(T::WeightInfo::order_place())]
+        pub fn order_place(
             origin: OriginFor<T>,
             publisher: PublisherId<T>,
             game_id: GameId,

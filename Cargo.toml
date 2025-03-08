@@ -73,6 +73,7 @@ sp-storage = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkad
 sp-timestamp = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2412-1", default-features = false }
 sp-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2412-1", default-features = false }
 sp-version = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2412-1", default-features = false }
+sp-weights = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2412-1", default-features = false }
 
 # Frame and pallets
 frame-executive = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2412-1", default-features = false }
