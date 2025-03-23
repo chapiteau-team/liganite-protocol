@@ -6,6 +6,8 @@ use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_genesis_builder::{self, PresetId};
 use sp_keyring::AccountKeyring;
 
+const DEFAULT_PUBLISHER_DEPOSIT: u128 = 1_000;
+
 // Returns the genesis config presets populated with given parameters.
 fn testnet_genesis(
     initial_authorities: Vec<(AuraId, GrandpaId)>,
@@ -28,6 +30,7 @@ fn testnet_genesis(
             ..Default::default()
         },
         sudo: SudoConfig { key: Some(root) },
+        publish: liganite_publish::GenesisConfig { publisher_deposit: DEFAULT_PUBLISHER_DEPOSIT },
         ..Default::default()
     };
 

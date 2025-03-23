@@ -159,6 +159,8 @@ impl pallet_sudo::Config for Runtime {
 impl liganite_publish::Config for Runtime {
     type WeightInfo = weights::liganite_publish::WeightInfo<Runtime>;
     type RuntimeEvent = RuntimeEvent;
+    type RuntimeHoldReason = RuntimeHoldReason;
+    type Currency = Balances;
 }
 
 impl liganite_games::Config for Runtime {

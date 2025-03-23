@@ -5043,6 +5043,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "liganite-primitives",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "sp-core",

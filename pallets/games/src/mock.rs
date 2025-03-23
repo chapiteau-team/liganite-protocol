@@ -70,6 +70,8 @@ impl pallet_balances::Config for Test {
 impl liganite_publish::Config for Test {
     type WeightInfo = ();
     type RuntimeEvent = RuntimeEvent;
+    type RuntimeHoldReason = RuntimeHoldReason;
+    type Currency = Balances;
 }
 
 impl liganite_games::Config for Test {
@@ -80,6 +82,7 @@ impl liganite_games::Config for Test {
     type PublisherManager = Publish;
 }
 
+pub const PUBLISHER_DEPOSIT: Balance = 1_000_000;
 pub const INITIAL_BALANCE: Balance = 1_000_000_000;
 
 pub const INVALID_PUBLISHER: PublisherId<Test> = 0;
@@ -96,6 +99,10 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
     }
     .assimilate_storage(&mut storage)
     .unwrap();
+
+    liganite_publish::GenesisConfig::<Test> { publisher_deposit: PUBLISHER_DEPOSIT }
+        .assimilate_storage(&mut storage)
+        .unwrap();
 
     let mut ext = sp_io::TestExternalities::new(storage);
     ext.execute_with(|| {

@@ -32,22 +32,35 @@ use core::marker::PhantomData;
 /// Weight functions for `liganite_publish`.
 pub struct WeightInfo<T>(PhantomData<T>);
 impl<T: frame_system::Config> liganite_publish::WeightInfo for WeightInfo<T> {
+	/// Storage: `Publish::PublisherDeposit` (r:0 w:1)
+	/// Proof: `Publish::PublisherDeposit` (`max_values`: Some(1), `max_size`: Some(16), added: 511, mode: `MaxEncodedLen`)
+	fn deposit_set() -> Weight {
+		// Proof Size summary in bytes:
+		//  Measured:  `0`
+		//  Estimated: `0`
+		// Minimum execution time: 3_147_000 picoseconds.
+		Weight::from_parts(3_444_000, 0)
+			.saturating_add(Weight::from_parts(0, 0))
+			.saturating_add(T::DbWeight::get().writes(1))
+	}
 	/// Storage: `Publish::Publishers` (r:1 w:1)
 	/// Proof: `Publish::Publishers` (`max_values`: None, `max_size`: Some(300), added: 2775, mode: `MaxEncodedLen`)
+	/// Storage: `Publish::PublisherDeposit` (r:1 w:0)
+	/// Proof: `Publish::PublisherDeposit` (`max_values`: Some(1), `max_size`: Some(16), added: 511, mode: `MaxEncodedLen`)
+	/// Storage: `Balances::Holds` (r:1 w:1)
+	/// Proof: `Balances::Holds` (`max_values`: None, `max_size`: Some(85), added: 2560, mode: `MaxEncodedLen`)
 	/// The range of component `a` is `[1, 128]`.
 	/// The range of component `b` is `[0, 128]`.
-	fn publisher_add(a: u32, b: u32, ) -> Weight {
+	fn publisher_register(_a: u32, b: u32, ) -> Weight {
 		// Proof Size summary in bytes:
-		//  Measured:  `6`
+		//  Measured:  `45`
 		//  Estimated: `3765`
-		// Minimum execution time: 12_630_000 picoseconds.
-		Weight::from_parts(8_891_153, 0)
+		// Minimum execution time: 36_876_000 picoseconds.
+		Weight::from_parts(39_559_611, 0)
 			.saturating_add(Weight::from_parts(0, 3765))
-			// Standard Error: 4_506
-			.saturating_add(Weight::from_parts(33_736, 0).saturating_mul(a.into()))
-			// Standard Error: 4_472
-			.saturating_add(Weight::from_parts(33_259, 0).saturating_mul(b.into()))
-			.saturating_add(T::DbWeight::get().reads(1))
-			.saturating_add(T::DbWeight::get().writes(1))
+			// Standard Error: 986
+			.saturating_add(Weight::from_parts(607, 0).saturating_mul(b.into()))
+			.saturating_add(T::DbWeight::get().reads(3))
+			.saturating_add(T::DbWeight::get().writes(2))
 	}
 }
