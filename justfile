@@ -119,12 +119,12 @@ test-all: check-stable-toolchain
 ################################################################################
 
 # Benchmark all pallets
-bench-pallets: install-bencher
+bench-pallets: install-bencher build-bench
     @chmod +x ./.maintenance/scripts/benchmark-pallets.sh
     @./.maintenance/scripts/benchmark-pallets.sh {{ RUNTIME_PROD }} {{ WEIGHTS_PATH }}
 
 # Benchmark overhead
-bench-overhead: install-bencher
+bench-overhead: install-bencher build-bench
     @frame-omni-bencher v1 benchmark overhead --runtime {{ RUNTIME_PROD }} --weight-path {{ WEIGHTS_PATH }}
 
 # Run all benchmarks

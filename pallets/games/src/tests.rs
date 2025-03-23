@@ -1,4 +1,6 @@
-use crate::{mock::*, BuyerOrders, Error, Event, HoldReason, PublishedGames, PublisherOrders};
+use crate::{
+    mock::*, BuyerOrders, Error, Event, HoldReason, OwnedGames, PublishedGames, PublisherOrders,
+};
 use frame_support::{assert_noop, assert_ok, traits::fungible};
 use liganite_primitives::{
     testing::bounded_vec,
@@ -57,7 +59,7 @@ fn test_game_add_empty_name() {
 }
 
 #[test]
-fn test_game_order() {
+fn test_order_place() {
     new_test_ext().execute_with(|| {
         let game_id = 1;
         let price = 12345;
@@ -88,7 +90,7 @@ fn test_game_order() {
 }
 
 #[test]
-fn test_game_order_no_funds() {
+fn test_order_place_no_funds() {
     new_test_ext().execute_with(|| {
         let game_id = 1;
         let price = 12345;
@@ -104,11 +106,108 @@ fn test_game_order_no_funds() {
 }
 
 #[test]
-fn test_game_order_invalid_game() {
+fn test_order_place_invalid_game() {
     new_test_ext().execute_with(|| {
         assert_noop!(
             Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, 1),
             Error::<Test>::GameNotFound
+        );
+    })
+}
+
+#[test]
+fn test_order_place_already_placed() {
+    new_test_ext().execute_with(|| {
+        let game_id = 1;
+        let price = 12345;
+        let details =
+            GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+
+        assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
+
+        assert_noop!(
+            Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id),
+            Error::<Test>::OrderAlreadyPlaced
+        );
+    })
+}
+
+#[test]
+fn test_order_place_owned_game() {
+    new_test_ext().execute_with(|| {
+        let game_id = 1;
+        OwnedGames::<Test>::insert(FUNDED_BUYER, (PUBLISHER, game_id), ());
+
+        assert_noop!(
+            Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id),
+            Error::<Test>::GameAlreadyExists
+        );
+    })
+}
+
+#[test]
+fn test_order_fulfill() {
+    new_test_ext().execute_with(|| {
+        let game_id = 1;
+        let price = 12345;
+        let details =
+            GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+
+        assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
+
+        assert_ok!(Games::order_fulfill(RuntimeOrigin::signed(PUBLISHER), game_id, FUNDED_BUYER));
+
+        assert_eq!(BuyerOrders::<Test>::get(FUNDED_BUYER, (PUBLISHER, game_id)), None);
+        assert_eq!(PublisherOrders::<Test>::get(PUBLISHER, game_id), None);
+        assert_eq!(OwnedGames::<Test>::get(FUNDED_BUYER, (PUBLISHER, game_id)), Some(()));
+        assert_eq!(
+            <Balances as fungible::Inspect<_>>::balance(&PUBLISHER),
+            INITIAL_BALANCE + price
+        );
+        assert_eq!(
+            <Balances as fungible::Inspect<_>>::balance(&FUNDED_BUYER),
+            INITIAL_BALANCE - price
+        );
+        assert_eq!(
+            <Balances as fungible::hold::Inspect<_>>::balance_on_hold(
+                &HoldReason::GamePayment.into(),
+                &FUNDED_BUYER
+            ),
+            0
+        );
+        System::assert_last_event(
+            Event::OrderFulfilled { buyer: FUNDED_BUYER, publisher: PUBLISHER, game_id }.into(),
+        );
+    })
+}
+
+#[test]
+fn test_order_fulfill_missing_order() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            Games::order_fulfill(RuntimeOrigin::signed(PUBLISHER), 1, FUNDED_BUYER),
+            Error::<Test>::OrderNotFound
+        );
+    })
+}
+
+#[test]
+fn test_order_fulfill_invalid_game() {
+    new_test_ext().execute_with(|| {
+        let game_id = 1;
+        let price = 12345;
+        let details =
+            GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+
+        assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
+
+        let invalid_game_id = game_id + 1;
+        assert_noop!(
+            Games::order_fulfill(RuntimeOrigin::signed(PUBLISHER), invalid_game_id, FUNDED_BUYER),
+            Error::<Test>::OrderNotFound
         );
     })
 }

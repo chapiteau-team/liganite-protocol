@@ -34,6 +34,10 @@ type OrderDetailsOf<T> = OrderDetails<CurrencyOf<T>>;
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
+    use frame_support::traits::tokens::{
+        Fortitude::Polite, Precision::BestEffort, Restriction::Free,
+    };
+    use liganite_primitives::types::GlobalGameId;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -112,15 +116,27 @@ pub mod pallet {
         OptionQuery,
     >;
 
-    /// Storage for the game orders. Is a map of BuyerId -> (PublisherId, GameId) -> OrderDetails.
+    /// Storage for the game orders. Is a map of BuyerId -> GlobalGameId -> OrderDetails.
     #[pallet::storage]
     pub type BuyerOrders<T> = StorageDoubleMap<
         _,
         Twox64Concat,
         BuyerId<T>,
         Blake2_128Concat,
-        (PublisherId<T>, GameId),
+        GlobalGameId<T>,
         OrderDetailsOf<T>,
+        OptionQuery,
+    >;
+
+    /// Storage for the game ownership. Is a map of BuyerId -> GlobalGameId -> ().
+    #[pallet::storage]
+    pub type OwnedGames<T> = StorageDoubleMap<
+        _,
+        Twox64Concat,
+        BuyerId<T>,
+        Blake2_128Concat,
+        GlobalGameId<T>,
+        (),
         OptionQuery,
     >;
 
@@ -144,6 +160,15 @@ pub mod pallet {
             /// The game id.
             game_id: GameId,
         },
+        /// An order has been fulfilled.
+        OrderFulfilled {
+            /// The buyer of the game.
+            buyer: BuyerId<T>,
+            /// The publisher of the game.
+            publisher: PublisherId<T>,
+            /// The game id.
+            game_id: GameId,
+        },
     }
 
     /// Errors.
@@ -157,6 +182,10 @@ pub mod pallet {
         GameAlreadyExists,
         /// The game details are invalid.
         GameDetailsInvalid,
+        /// The order is already placed.
+        OrderAlreadyPlaced,
+        /// The order is not found.
+        OrderNotFound,
     }
 
     /// Dispatchable functions ([`Call`]s).
@@ -207,6 +236,15 @@ pub mod pallet {
             game_id: GameId,
         ) -> DispatchResult {
             let buyer = ensure_signed(origin)?;
+            ensure!(
+                !BuyerOrders::<T>::contains_key(&buyer, (&publisher, game_id)),
+                Error::<T>::OrderAlreadyPlaced
+            );
+            ensure!(
+                !OwnedGames::<T>::contains_key(&buyer, (&publisher, game_id)),
+                Error::<T>::GameAlreadyExists
+            );
+
             let game_details =
                 PublishedGames::<T>::get(&publisher, game_id).ok_or(Error::<T>::GameNotFound)?;
 
@@ -217,6 +255,42 @@ pub mod pallet {
             PublisherOrders::<T>::insert(&publisher, game_id, &buyer);
 
             Self::deposit_event(Event::OrderPlaced { buyer, publisher, game_id });
+            Ok(())
+        }
+
+        /// Fulfills an order for a game.
+        ///
+        /// This function is triggered by the publisher when they want to fulfill an order.
+        /// It checks that the order exists, transfers the deposit from the buyer to the publisher,
+        /// and then removes the order from the system, adding the game to the owned games list
+        /// for the buyer. A `OrderFulfilled` event is emitted once the order is fulfilled.
+        #[pallet::call_index(2)]
+        #[pallet::weight(T::WeightInfo::order_fulfill())]
+        pub fn order_fulfill(
+            origin: OriginFor<T>,
+            game_id: GameId,
+            buyer: BuyerId<T>,
+        ) -> DispatchResult {
+            let publisher = ensure_signed(origin)?;
+
+            let order = BuyerOrders::<T>::get(&buyer, (&publisher, game_id))
+                .ok_or(Error::<T>::OrderNotFound)?;
+
+            T::Currency::transfer_on_hold(
+                &HoldReason::GamePayment.into(),
+                &buyer,
+                &publisher,
+                order.deposit,
+                BestEffort,
+                Free,
+                Polite,
+            )?;
+
+            BuyerOrders::<T>::remove(&buyer, (&publisher, game_id));
+            PublisherOrders::<T>::remove(&publisher, game_id);
+            OwnedGames::<T>::insert(&buyer, (&publisher, game_id), ());
+
+            Self::deposit_event(Event::OrderFulfilled { buyer, publisher, game_id });
             Ok(())
         }
     }

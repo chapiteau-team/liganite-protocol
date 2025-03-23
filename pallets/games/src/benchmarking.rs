@@ -75,5 +75,29 @@ mod benchmarks {
         assert_eq!(PublisherOrders::<T>::get(&publisher, game_id), Some(buyer));
     }
 
+    #[benchmark]
+    fn order_fulfill() {
+        let publisher = whitelisted_caller();
+        prefund_account::<T>(&publisher);
+        let game_id = 10;
+        let buyer = get_account::<T>(0);
+        let price = CurrencyOf::<T>::from(1_234u32);
+        let game_details = GameDetails {
+            name: bounded_vec(&vec![b'a'; MAX_NAME_SIZE as usize]),
+            tags: bounded_vec(&vec![TagId::default(); MAX_TAGS_PER_GAME as usize]),
+            price,
+        };
+        PublishedGames::<T>::insert(&publisher, game_id, game_details);
+        BuyerOrders::<T>::insert(&buyer, (&publisher, game_id), &OrderDetails { deposit: price });
+        PublisherOrders::<T>::insert(&publisher, game_id, &buyer);
+
+        #[extrinsic_call]
+        _(RawOrigin::Signed(publisher.clone()), game_id, buyer.clone());
+
+        assert_eq!(BuyerOrders::<T>::get(&buyer, (&publisher, game_id)), None);
+        assert_eq!(PublisherOrders::<T>::get(&publisher, game_id), None);
+        assert_eq!(OwnedGames::<T>::get(&buyer, (&publisher, game_id)), Some(()));
+    }
+
     impl_benchmark_test_suite!(Games, mock::new_test_ext(), mock::Test);
 }

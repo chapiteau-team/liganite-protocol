@@ -7,6 +7,7 @@ pub type Tag = BoundedVec<u8, ConstU32<MAX_TAG_SIZE>>;
 pub type GameTags = BoundedVec<TagId, ConstU32<MAX_TAGS_PER_GAME>>;
 
 pub type GameId = u16;
+pub type GlobalGameId<T> = (PublisherId<T>, GameId);
 pub type TagId = u16;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
