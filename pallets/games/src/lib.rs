@@ -160,6 +160,15 @@ pub mod pallet {
             /// The game id.
             game_id: GameId,
         },
+        /// An order has been cancelled.
+        OrderCancelled {
+            /// The buyer of the game.
+            buyer: BuyerId<T>,
+            /// The publisher of the game.
+            publisher: PublisherId<T>,
+            /// The game id.
+            game_id: GameId,
+        },
         /// An order has been fulfilled.
         OrderFulfilled {
             /// The buyer of the game.
@@ -258,13 +267,44 @@ pub mod pallet {
             Ok(())
         }
 
+        /// Cancels an order for a game.
+        ///
+        /// This function is triggered by the buyer when they want to cancel an order.
+        /// It checks that the order exists, and then releases the deposit from the buyer.
+        /// A `OrderCancelled` event is emitted once the order is successfully cancelled.
+        #[pallet::call_index(2)]
+        #[pallet::weight(T::WeightInfo::order_cancel())]
+        pub fn order_cancel(
+            origin: OriginFor<T>,
+            publisher: PublisherId<T>,
+            game_id: GameId,
+        ) -> DispatchResult {
+            let buyer = ensure_signed(origin)?;
+
+            let order = BuyerOrders::<T>::get(&buyer, (&publisher, game_id))
+                .ok_or(Error::<T>::OrderNotFound)?;
+
+            T::Currency::release(
+                &HoldReason::GamePayment.into(),
+                &buyer,
+                order.deposit,
+                BestEffort,
+            )?;
+
+            BuyerOrders::<T>::remove(&buyer, (&publisher, game_id));
+            PublisherOrders::<T>::remove(&publisher, game_id);
+
+            Self::deposit_event(Event::OrderCancelled { buyer, publisher, game_id });
+            Ok(())
+        }
+
         /// Fulfills an order for a game.
         ///
         /// This function is triggered by the publisher when they want to fulfill an order.
         /// It checks that the order exists, transfers the deposit from the buyer to the publisher,
         /// and then removes the order from the system, adding the game to the owned games list
         /// for the buyer. A `OrderFulfilled` event is emitted once the order is fulfilled.
-        #[pallet::call_index(2)]
+        #[pallet::call_index(3)]
         #[pallet::weight(T::WeightInfo::order_fulfill())]
         pub fn order_fulfill(
             origin: OriginFor<T>,

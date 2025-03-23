@@ -147,6 +147,46 @@ fn test_order_place_owned_game() {
 }
 
 #[test]
+fn test_order_cancel() {
+    new_test_ext().execute_with(|| {
+        let game_id = 1;
+        let price = 12345;
+        let details =
+            GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+
+        assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
+
+        assert_ok!(Games::order_cancel(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
+
+        assert_eq!(BuyerOrders::<Test>::get(FUNDED_BUYER, (PUBLISHER, game_id)), None);
+        assert_eq!(PublisherOrders::<Test>::get(PUBLISHER, game_id), None);
+        assert_eq!(OwnedGames::<Test>::get(FUNDED_BUYER, (PUBLISHER, game_id)), None);
+        assert_eq!(<Balances as fungible::Inspect<_>>::balance(&FUNDED_BUYER), INITIAL_BALANCE);
+        assert_eq!(
+            <Balances as fungible::hold::Inspect<_>>::balance_on_hold(
+                &HoldReason::GamePayment.into(),
+                &FUNDED_BUYER
+            ),
+            0
+        );
+        System::assert_last_event(
+            Event::OrderCancelled { buyer: FUNDED_BUYER, publisher: PUBLISHER, game_id }.into(),
+        );
+    })
+}
+
+#[test]
+fn test_order_cancel_missing_order() {
+    new_test_ext().execute_with(|| {
+        assert_noop!(
+            Games::order_cancel(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, 1),
+            Error::<Test>::OrderNotFound
+        );
+    })
+}
+
+#[test]
 fn test_order_fulfill() {
     new_test_ext().execute_with(|| {
         let game_id = 1;

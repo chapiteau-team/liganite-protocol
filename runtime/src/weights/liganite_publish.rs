@@ -36,13 +36,17 @@ impl<T: frame_system::Config> liganite_publish::WeightInfo for WeightInfo<T> {
 	/// Proof: `Publish::Publishers` (`max_values`: None, `max_size`: Some(300), added: 2775, mode: `MaxEncodedLen`)
 	/// The range of component `a` is `[1, 128]`.
 	/// The range of component `b` is `[0, 128]`.
-	fn publisher_add(_a: u32, _b: u32, ) -> Weight {
+	fn publisher_add(a: u32, b: u32, ) -> Weight {
 		// Proof Size summary in bytes:
 		//  Measured:  `6`
 		//  Estimated: `3765`
-		// Minimum execution time: 6_675_000 picoseconds.
-		Weight::from_parts(8_362_303, 0)
+		// Minimum execution time: 12_630_000 picoseconds.
+		Weight::from_parts(8_891_153, 0)
 			.saturating_add(Weight::from_parts(0, 3765))
+			// Standard Error: 4_506
+			.saturating_add(Weight::from_parts(33_736, 0).saturating_mul(a.into()))
+			// Standard Error: 4_472
+			.saturating_add(Weight::from_parts(33_259, 0).saturating_mul(b.into()))
 			.saturating_add(T::DbWeight::get().reads(1))
 			.saturating_add(T::DbWeight::get().writes(1))
 	}

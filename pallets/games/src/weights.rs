@@ -9,6 +9,7 @@ use core::marker::PhantomData;
 pub trait WeightInfo {
     fn game_add(a: u32, b: u32) -> Weight;
     fn order_place() -> Weight;
+    fn order_cancel() -> Weight;
     fn order_fulfill() -> Weight;
 }
 
@@ -20,6 +21,11 @@ impl WeightInfo for () {
     }
 
     fn order_place() -> Weight {
+        Weight::from_parts(9_000_000, 0)
+            .saturating_add(RocksDbWeight::get().writes(1_u64))
+    }
+
+    fn order_cancel() -> Weight {
         Weight::from_parts(9_000_000, 0)
             .saturating_add(RocksDbWeight::get().writes(1_u64))
     }

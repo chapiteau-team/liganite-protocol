@@ -40,15 +40,17 @@ impl<T: frame_system::Config> liganite_games::WeightInfo for WeightInfo<T> {
 	/// Proof: `Games::Tags` (`max_values`: None, `max_size`: Some(69), added: 2544, mode: `MaxEncodedLen`)
 	/// The range of component `a` is `[1, 128]`.
 	/// The range of component `b` is `[0, 20]`.
-	fn game_add(_a: u32, b: u32, ) -> Weight {
+	fn game_add(a: u32, b: u32, ) -> Weight {
 		// Proof Size summary in bytes:
 		//  Measured:  `437 + b * (249 ±0)`
 		//  Estimated: `3765 + b * (2544 ±0)`
-		// Minimum execution time: 12_078_000 picoseconds.
-		Weight::from_parts(133_877_788, 0)
+		// Minimum execution time: 12_082_000 picoseconds.
+		Weight::from_parts(12_396_000, 0)
 			.saturating_add(Weight::from_parts(0, 3765))
-			// Standard Error: 105_459
-			.saturating_add(Weight::from_parts(3_520_281, 0).saturating_mul(b.into()))
+			// Standard Error: 12_674
+			.saturating_add(Weight::from_parts(174_131, 0).saturating_mul(a.into()))
+			// Standard Error: 81_808
+			.saturating_add(Weight::from_parts(4_845_176, 0).saturating_mul(b.into()))
 			.saturating_add(T::DbWeight::get().reads(2))
 			.saturating_add(T::DbWeight::get().reads((1_u64).saturating_mul(b.into())))
 			.saturating_add(T::DbWeight::get().writes(1))
@@ -68,10 +70,26 @@ impl<T: frame_system::Config> liganite_games::WeightInfo for WeightInfo<T> {
 		// Proof Size summary in bytes:
 		//  Measured:  `335`
 		//  Estimated: `3710`
-		// Minimum execution time: 41_823_000 picoseconds.
-		Weight::from_parts(42_701_000, 0)
+		// Minimum execution time: 79_018_000 picoseconds.
+		Weight::from_parts(81_655_000, 0)
 			.saturating_add(Weight::from_parts(0, 3710))
 			.saturating_add(T::DbWeight::get().reads(4))
+			.saturating_add(T::DbWeight::get().writes(3))
+	}
+	/// Storage: `Games::BuyerOrders` (r:1 w:1)
+	/// Proof: `Games::BuyerOrders` (`max_values`: None, `max_size`: Some(106), added: 2581, mode: `MaxEncodedLen`)
+	/// Storage: `Balances::Holds` (r:1 w:1)
+	/// Proof: `Balances::Holds` (`max_values`: None, `max_size`: Some(67), added: 2542, mode: `MaxEncodedLen`)
+	/// Storage: `Games::PublisherOrders` (r:0 w:1)
+	/// Proof: `Games::PublisherOrders` (`max_values`: None, `max_size`: Some(90), added: 2565, mode: `MaxEncodedLen`)
+	fn order_cancel() -> Weight {
+		// Proof Size summary in bytes:
+		//  Measured:  `259`
+		//  Estimated: `3571`
+		// Minimum execution time: 45_552_000 picoseconds.
+		Weight::from_parts(47_217_000, 0)
+			.saturating_add(Weight::from_parts(0, 3571))
+			.saturating_add(T::DbWeight::get().reads(2))
 			.saturating_add(T::DbWeight::get().writes(3))
 	}
 	/// Storage: `Games::BuyerOrders` (r:1 w:1)
@@ -88,8 +106,8 @@ impl<T: frame_system::Config> liganite_games::WeightInfo for WeightInfo<T> {
 		// Proof Size summary in bytes:
 		//  Measured:  `259`
 		//  Estimated: `3593`
-		// Minimum execution time: 29_240_000 picoseconds.
-		Weight::from_parts(29_997_000, 0)
+		// Minimum execution time: 55_084_000 picoseconds.
+		Weight::from_parts(56_542_000, 0)
 			.saturating_add(Weight::from_parts(0, 3593))
 			.saturating_add(T::DbWeight::get().reads(3))
 			.saturating_add(T::DbWeight::get().writes(5))
