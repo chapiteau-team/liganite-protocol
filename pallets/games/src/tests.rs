@@ -65,7 +65,7 @@ fn test_order_place() {
         let price = 12345;
         let details =
             GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
-        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details);
 
         assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
 
@@ -96,7 +96,7 @@ fn test_order_place_no_funds() {
         let price = 12345;
         let details =
             GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
-        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details);
 
         assert_noop!(
             Games::order_place(RuntimeOrigin::signed(NON_FUNDED_BUYER), PUBLISHER, game_id),
@@ -122,7 +122,7 @@ fn test_order_place_already_placed() {
         let price = 12345;
         let details =
             GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
-        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details);
 
         assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
 
@@ -147,13 +147,63 @@ fn test_order_place_owned_game() {
 }
 
 #[test]
+fn test_order_place_multiple() {
+    new_test_ext().execute_with(|| {
+        let game_id_1 = 1;
+        let price_1 = 11111;
+        let details = GameDetails {
+            name: bounded_vec(b"Example Game"),
+            price: price_1,
+            ..Default::default()
+        };
+        PublishedGames::<Test>::insert(PUBLISHER, game_id_1, details);
+
+        let game_id_2 = 2;
+        let price_2 = 22222;
+        let details = GameDetails {
+            name: bounded_vec(b"Example Game"),
+            price: price_2,
+            ..Default::default()
+        };
+        PublishedGames::<Test>::insert(PUBLISHER, game_id_2, details);
+
+        assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id_1));
+        assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id_2));
+
+        assert_eq!(
+            BuyerOrders::<Test>::get(FUNDED_BUYER, (PUBLISHER, game_id_1)),
+            Some(OrderDetails { deposit: price_1 })
+        );
+        assert_eq!(
+            BuyerOrders::<Test>::get(FUNDED_BUYER, (PUBLISHER, game_id_2)),
+            Some(OrderDetails { deposit: price_2 })
+        );
+        assert_eq!(PublisherOrders::<Test>::get(PUBLISHER, game_id_1), Some(FUNDED_BUYER));
+        assert_eq!(PublisherOrders::<Test>::get(PUBLISHER, game_id_2), Some(FUNDED_BUYER));
+
+        let total = price_1 + price_2;
+        assert_eq!(
+            <Balances as fungible::Inspect<_>>::balance(&FUNDED_BUYER),
+            INITIAL_BALANCE - total
+        );
+        assert_eq!(
+            <Balances as fungible::hold::Inspect<_>>::balance_on_hold(
+                &HoldReason::GamePayment.into(),
+                &FUNDED_BUYER
+            ),
+            total
+        );
+    })
+}
+
+#[test]
 fn test_order_cancel() {
     new_test_ext().execute_with(|| {
         let game_id = 1;
         let price = 12345;
         let details =
             GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
-        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details);
 
         assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
 
@@ -193,7 +243,7 @@ fn test_order_fulfill() {
         let price = 12345;
         let details =
             GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
-        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details);
 
         assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
 
@@ -240,7 +290,7 @@ fn test_order_fulfill_invalid_game() {
         let price = 12345;
         let details =
             GameDetails { name: bounded_vec(b"Example Game"), price, ..Default::default() };
-        PublishedGames::<Test>::insert(PUBLISHER, game_id, details.clone());
+        PublishedGames::<Test>::insert(PUBLISHER, game_id, details);
 
         assert_ok!(Games::order_place(RuntimeOrigin::signed(FUNDED_BUYER), PUBLISHER, game_id));
 
