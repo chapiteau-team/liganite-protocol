@@ -23,7 +23,8 @@ mod runtime {
         RuntimeHoldReason,
         RuntimeSlashReason,
         RuntimeLockId,
-        RuntimeTask
+        RuntimeTask,
+        RuntimeViewFunction
     )]
     pub struct Test;
 
@@ -77,9 +78,12 @@ pub const FUNDED_PUBLISHER: PublisherId<Test> = 1;
 pub fn new_test_ext() -> sp_io::TestExternalities {
     let mut storage = frame_system::GenesisConfig::<Test>::default().build_storage().unwrap();
 
-    pallet_balances::GenesisConfig::<Test> { balances: vec![(FUNDED_PUBLISHER, INITIAL_BALANCE)] }
-        .assimilate_storage(&mut storage)
-        .unwrap();
+    pallet_balances::GenesisConfig::<Test> {
+        balances: vec![(FUNDED_PUBLISHER, INITIAL_BALANCE)],
+        ..Default::default()
+    }
+    .assimilate_storage(&mut storage)
+    .unwrap();
 
     liganite_publish::GenesisConfig::<Test> { publisher_deposit: PUBLISHER_DEPOSIT }
         .assimilate_storage(&mut storage)

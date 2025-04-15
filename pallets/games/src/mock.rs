@@ -27,7 +27,8 @@ mod runtime {
         RuntimeHoldReason,
         RuntimeSlashReason,
         RuntimeLockId,
-        RuntimeTask
+        RuntimeTask,
+        RuntimeViewFunction
     )]
     pub struct Test;
 
@@ -96,6 +97,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 
     pallet_balances::GenesisConfig::<Test> {
         balances: vec![(PUBLISHER, INITIAL_BALANCE), (FUNDED_BUYER, INITIAL_BALANCE)],
+        ..Default::default()
     }
     .assimilate_storage(&mut storage)
     .unwrap();

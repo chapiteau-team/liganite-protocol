@@ -14,7 +14,18 @@ pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type PublisherId<T> = AccountIdOf<T>;
 pub type BuyerId<T> = AccountIdOf<T>;
 
-#[derive(Default, Clone, Eq, PartialEq, Debug, Encode, Decode, MaxEncodedLen, TypeInfo)]
+#[derive(
+    Default,
+    Clone,
+    Eq,
+    PartialEq,
+    Debug,
+    Encode,
+    Decode,
+    DecodeWithMemTracking,
+    MaxEncodedLen,
+    TypeInfo,
+)]
 pub struct PublisherDetails {
     /// The name of the publisher
     pub name: Name,
@@ -28,7 +39,18 @@ impl PublisherDetails {
     }
 }
 
-#[derive(Default, Clone, Eq, PartialEq, Debug, Encode, Decode, MaxEncodedLen, TypeInfo)]
+#[derive(
+    Default,
+    Clone,
+    Eq,
+    PartialEq,
+    Debug,
+    Encode,
+    Decode,
+    DecodeWithMemTracking,
+    MaxEncodedLen,
+    TypeInfo,
+)]
 #[scale_info(skip_type_params(Currency))]
 pub struct GameDetails<Currency> {
     /// The name of the game
