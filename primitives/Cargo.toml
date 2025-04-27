@@ -13,6 +13,9 @@ publish = false
 workspace = true
 
 [dependencies]
+cid = { workspace = true, features = ["alloc"] }
+url = { workspace = true }
+
 frame-support = { workspace = true }
 frame-system = { workspace = true }
 
@@ -23,6 +26,8 @@ scale-info = { workspace = true, features = ["derive"] }
 [features]
 default = ["std"]
 std = [
+    "cid/std",
+    "url/std",
     "frame-support/std",
     "frame-system/std",
     "scale-codec/std",

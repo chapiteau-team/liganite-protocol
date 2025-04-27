@@ -3,15 +3,22 @@
 
 use frame_support::{
     pallet_prelude::*,
-    traits::fungible::{hold::Mutate as FunHoldMutate, Inspect as FunInspect, Mutate as FunMutate},
+    traits::{
+        fungible::{hold::Mutate as FunHoldMutate, Inspect as FunInspect, Mutate as FunMutate},
+        tokens::{
+            Fortitude::Polite, Precision::BestEffort, Preservation::Preserve, Restriction::Free,
+        },
+    },
 };
 use frame_system::pallet_prelude::*;
 use liganite_primitives::{
     publisher::PublisherManager,
     tags::TAGS,
-    types::{AccountIdOf, BuyerId, GameDetails, GameId, OrderDetails, PublisherId, Tag, TagId},
+    types::{
+        AccountIdOf, BuyerId, Cid, Distribution, GameDetails, GameId, GlobalGameId, OrderDetails,
+        PublisherId, Tag, TagId,
+    },
 };
-
 // Re-export pallet items so that they can be accessed from the crate namespace.
 pub use pallet::*;
 
@@ -34,10 +41,6 @@ type OrderDetailsOf<T> = OrderDetails<CurrencyOf<T>>;
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
-    use frame_support::traits::tokens::{
-        Fortitude::Polite, Precision::BestEffort, Restriction::Free,
-    };
-    use liganite_primitives::types::GlobalGameId;
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
@@ -151,6 +154,17 @@ pub mod pallet {
             /// The game id.
             game_id: GameId,
         },
+        /// A game has been purchased.
+        GamePurchased {
+            /// The buyer of the game.
+            buyer: BuyerId<T>,
+            /// The publisher of the game.
+            publisher: PublisherId<T>,
+            /// The game id.
+            game_id: GameId,
+            /// The CID of the game that can be downloaded.
+            cid: Cid,
+        },
         /// An order has been placed.
         OrderPlaced {
             /// The buyer of the game.
@@ -206,7 +220,8 @@ pub mod pallet {
         /// checks that the game does not already exist in the system before adding
         /// them. A `GameAdded` event is emitted once the game is successfully added.
         #[pallet::call_index(0)]
-        #[pallet::weight(T::WeightInfo::game_add(details.name.len() as u32, details.tags.len() as u32))]
+        #[pallet::weight(T::WeightInfo::game_add(details.name.len() as u32, details.tags.len() as u32
+        ))]
         pub fn game_add(
             origin: OriginFor<T>,
             game_id: GameId,
@@ -234,12 +249,14 @@ pub mod pallet {
 
         /// Places an order for a game.
         ///
-        /// This function places an order for a game by storing their details in the `BuyerOrders`
-        /// and `PublisherOrders` storage. It checks that the game exists in the system before
-        /// adding them. A `OrderPlaced` event is emitted once the order is successfully added.
+        /// This function purchases by a way depending on the game's distribution. If the game is
+        /// distributed free of charge, the game is added to the buyer's collection. If the game
+        /// supports instant distribution, the game is added to the buyer's collection and the
+        /// payment is sent to the publisher. If the game supports delayed distribution, an order is
+        /// created and the payment is sent to the publisher.
         #[pallet::call_index(1)]
-        #[pallet::weight(T::WeightInfo::order_place())]
-        pub fn order_place(
+        #[pallet::weight(T::WeightInfo::game_buy())]
+        pub fn game_buy(
             origin: OriginFor<T>,
             publisher: PublisherId<T>,
             game_id: GameId,
@@ -257,13 +274,32 @@ pub mod pallet {
             let game_details =
                 PublishedGames::<T>::get(&publisher, game_id).ok_or(Error::<T>::GameNotFound)?;
 
-            T::Currency::hold(&HoldReason::GamePayment.into(), &buyer, game_details.price)?;
+            match game_details.distribution {
+                Distribution::Free { cid } => {
+                    // Simply add the game to a buyer's collection
+                    OwnedGames::<T>::insert(&buyer, (&publisher, game_id), ());
 
-            let order = OrderDetails { deposit: game_details.price };
-            BuyerOrders::<T>::insert(&buyer, (&publisher, game_id), &order);
-            PublisherOrders::<T>::insert(&publisher, game_id, &buyer);
+                    Self::deposit_event(Event::GamePurchased { buyer, publisher, game_id, cid });
+                },
+                Distribution::Instant { price, cid } => {
+                    // Transfer money and add the game to a buyer's collection
+                    T::Currency::transfer(&buyer, &publisher, price, Preserve)?;
+                    OwnedGames::<T>::insert(&buyer, (&publisher, game_id), ());
 
-            Self::deposit_event(Event::OrderPlaced { buyer, publisher, game_id });
+                    Self::deposit_event(Event::GamePurchased { buyer, publisher, game_id, cid });
+                },
+                Distribution::Individual { price } => {
+                    // Place an order
+                    T::Currency::hold(&HoldReason::GamePayment.into(), &buyer, price)?;
+
+                    let order = OrderDetails { deposit: price };
+                    BuyerOrders::<T>::insert(&buyer, (&publisher, game_id), &order);
+                    PublisherOrders::<T>::insert(&publisher, game_id, &buyer);
+
+                    Self::deposit_event(Event::OrderPlaced { buyer, publisher, game_id });
+                },
+            }
+
             Ok(())
         }
 
@@ -331,6 +367,8 @@ pub mod pallet {
             OwnedGames::<T>::insert(&buyer, (&publisher, game_id), ());
 
             Self::deposit_event(Event::OrderFulfilled { buyer, publisher, game_id });
+
+            // TODO: deposit GamePurchased event
             Ok(())
         }
     }

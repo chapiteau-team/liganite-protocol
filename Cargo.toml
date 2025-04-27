@@ -29,10 +29,12 @@ rpath = false        # Disables adding rpath to the binary
 unit_arg = { level = "allow", priority = 1 }
 
 [workspace.dependencies]
+cid = { version = "0.11.1", default-features = false }
 clap = { version = "4.5.13" }
 futures = { version = "0.3.31" }
 jsonrpsee = { version = "0.24.3" }
 serde_json = { version = "1.0.132", default-features = false }
+url = { version = "2.5.4", default-features = false }
 
 # Local Dependencies
 liganite-games = { path = "pallets/games", default-features = false }

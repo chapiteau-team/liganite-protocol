@@ -34,9 +34,10 @@ mod benchmarks {
     }
 
     #[benchmark]
-    fn publisher_register(a: Linear<1, MAX_NAME_SIZE>, b: Linear<0, MAX_URL_SIZE>) {
+    fn publisher_register(a: Linear<1, MAX_NAME_SIZE>, b: Linear<8, MAX_URL_SIZE>) {
         let name = bounded_vec(&vec![b'a'; a as usize]);
-        let url = bounded_vec(&vec![b'b'; b as usize]);
+        let mut url = bounded_vec(b"http://".as_slice());
+        assert!(url.try_extend(vec![b'b'; (b - 7) as usize].into_iter()).is_ok());
         let details = PublisherDetails { name, url };
         let caller: T::AccountId = whitelisted_caller();
         prefund_account::<T>(&caller);

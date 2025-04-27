@@ -11,7 +11,7 @@ use liganite_primitives::{
 use sp_runtime::BuildStorage;
 
 type Block = frame_system::mocking::MockBlock<Test>;
-type Balance = u64;
+pub type Balance = u64;
 
 #[frame_support::runtime]
 mod runtime {
@@ -103,6 +103,10 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
     .unwrap();
 
     liganite_publish::GenesisConfig::<Test> { publisher_deposit: PUBLISHER_DEPOSIT }
+        .assimilate_storage(&mut storage)
+        .unwrap();
+
+    liganite_games::GenesisConfig::<Test>::default()
         .assimilate_storage(&mut storage)
         .unwrap();
 
